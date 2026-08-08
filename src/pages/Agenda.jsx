@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Plus, Search, Filter, Edit2, Trash2 } from 'lucide-react';
 import './Agenda.css';
+import EventForm from '../components/EventForm';
+import { Modal } from '../components/Modal';
 
 const Agenda = () => {
   const { profile } = useAuth();
@@ -12,16 +14,11 @@ const Agenda = () => {
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    date: '',
-    time: '',
-    committee_id: '',
-    location: 'Templo',
-    custom_location: '',
-    description: '',
-    observations: ''
-  });
+  const [selectedEvent, setSelectedEvent] = useState(null); // null = create, object = edit
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCommittee, setFilterCommittee] = useState('');
 
   useEffect(() => {
     if (profile?.congregation_id) {
@@ -43,6 +40,7 @@ const Agenda = () => {
       const { data: evtData } = await supabase
         .from('events')
         .select(`*, committees(name, color)`)
+        .eq('congregation_id', profile.congregation_id)
         .order('date', { ascending: true })
         .order('time', { ascending: true });
       if (evtData) setEvents(evtData);
@@ -53,40 +51,6 @@ const Agenda = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const finalLocation = formData.location === 'Otro' ? formData.custom_location : formData.location;
-      
-      const newEvent = {
-        congregation_id: profile.congregation_id,
-        committee_id: formData.committee_id,
-        name: formData.name,
-        date: formData.date,
-        time: formData.time,
-        location: finalLocation,
-        description: formData.description,
-        observations: formData.observations,
-        created_by: profile.id
-      };
-
-      const { error } = await supabase.from('events').insert([newEvent]);
-      if (error) throw error;
-      
-      setIsModalOpen(false);
-      resetForm();
-      fetchData(); // Refresh list
-    } catch (error) {
-      console.error('Error saving event:', error);
-      alert('Error al guardar el evento. Verifica los datos e inténtalo nuevamente.');
-    }
-  };
-
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar este evento?')) {
       await supabase.from('events').delete().eq('id', id);
@@ -94,12 +58,28 @@ const Agenda = () => {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '', date: '', time: '', committee_id: '',
-      location: 'Templo', custom_location: '', description: '', observations: ''
-    });
+  const openCreate = () => {
+    setSelectedEvent(null);
+    setIsModalOpen(true);
   };
+
+  const openEdit = (event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  // Filter the events
+  const filteredEvents = events.filter(event => {
+    const searchMatch = event.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        (event.location && event.location.toLowerCase().includes(searchQuery.toLowerCase()));
+    const committeeMatch = filterCommittee ? event.committee_id === filterCommittee : true;
+    return searchMatch && committeeMatch;
+  });
 
   return (
     <div className="agenda-page">
@@ -108,7 +88,7 @@ const Agenda = () => {
           <h1>Gestión de Eventos</h1>
           <p>Administra toda la programación de la congregación.</p>
         </div>
-        <button className="add-btn" onClick={() => setIsModalOpen(true)}>
+        <button className="add-btn" onClick={openCreate}>
           <Plus size={18} /> Agregar Evento
         </button>
       </div>
@@ -116,11 +96,19 @@ const Agenda = () => {
       <div className="agenda-controls">
         <div className="search-box">
           <Search size={18} />
-          <input type="text" placeholder="Buscar evento..." />
+          <input 
+            type="text" 
+            placeholder="Buscar evento o lugar..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
         <div className="filter-box">
           <Filter size={18} />
-          <select>
+          <select 
+            value={filterCommittee}
+            onChange={(e) => setFilterCommittee(e.target.value)}
+          >
             <option value="">Todos los comités</option>
             {committees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
@@ -129,91 +117,46 @@ const Agenda = () => {
 
       {loading ? (
         <div className="loading-state">Cargando eventos...</div>
-      ) : events.length === 0 ? (
-        <div className="empty-state">
-          No hay eventos programados. Haz clic en "Agregar Evento" para comenzar.
+      ) : filteredEvents.length === 0 ? (
+        <div className="empty-state" style={{background: 'white', padding: '3rem', borderRadius: '14px', textAlign: 'center'}}>
+          {events.length === 0 
+            ? 'No hay eventos programados. Haz clic en "Agregar Evento" para comenzar.'
+            : 'No se encontraron eventos con los filtros actuales.'}
         </div>
       ) : (
         <div className="events-grid">
-          {events.map(event => (
-            <div key={event.id} className="event-card" style={{ borderTop: `4px solid ${event.committees?.color || '#00338D'}` }}>
-              <div className="event-card-header">
-                <span className="event-date">{new Date(event.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          {filteredEvents.map(event => (
+            <div key={event.id} className="event-card" style={{ borderTop: `4px solid ${event.committees?.color || '#00338D'}`, background: 'white', padding: '1.5rem', borderRadius: '14px', boxShadow: 'var(--shadow-sm)' }}>
+              <div className="event-card-header" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 600}}>
+                <span className="event-date">{new Date(event.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}</span>
                 <span className="event-time">{event.time.substring(0,5)}</span>
               </div>
-              <h3 className="event-title">{event.name}</h3>
-              <span className="event-committee" style={{ backgroundColor: `${event.committees?.color}20`, color: event.committees?.color }}>
-                {event.committees?.name}
-              </span>
-              <p className="event-desc">{event.description}</p>
+              <h3 className="event-title" style={{marginBottom: '0.5rem', fontSize: '1.2rem'}}>{event.name}</h3>
+              <div style={{marginBottom: '1rem'}}>
+                <span className="event-committee" style={{ backgroundColor: `${event.committees?.color}20`, color: event.committees?.color, padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 700 }}>
+                  {event.committees?.name}
+                </span>
+              </div>
+              <p className="event-desc" style={{fontSize: '0.9rem', color: 'var(--color-text-main)', marginBottom: '1.5rem'}}>{event.location}</p>
               
-              <div className="event-actions">
-                <button className="icon-btn outline" onClick={() => {}}><Edit2 size={16} /></button>
-                <button className="icon-btn outline danger" onClick={() => handleDelete(event.id)}><Trash2 size={16} /></button>
+              <div className="event-actions" style={{display: 'flex', gap: '10px'}}>
+                <button className="icon-btn outline" style={{padding: '6px 12px'}} onClick={() => openEdit(event)}><Edit2 size={16} /></button>
+                <button className="icon-btn outline danger" style={{padding: '6px 12px', borderColor: 'var(--color-danger)', color: 'var(--color-danger)'}} onClick={() => handleDelete(event.id)}><Trash2 size={16} /></button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal Crear Evento */}
       {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Crear Nuevo Evento</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Fecha *</label>
-                  <input type="date" name="date" required value={formData.date} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Hora *</label>
-                  <input type="time" name="time" required value={formData.time} onChange={handleInputChange} />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Comité *</label>
-                <select name="committee_id" required value={formData.committee_id} onChange={handleInputChange}>
-                  <option value="">Selecciona un comité...</option>
-                  {committees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Nombre del evento *</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleInputChange} placeholder="Ej. Programa de integración familiar" />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Lugar *</label>
-                  <select name="location" required value={formData.location} onChange={handleInputChange}>
-                    <option value="Templo">Templo</option>
-                    <option value="Otro">Otro</option>
-                  </select>
-                </div>
-                {formData.location === 'Otro' && (
-                  <div className="form-group">
-                    <label>Especificar lugar *</label>
-                    <input type="text" name="custom_location" required value={formData.custom_location} onChange={handleInputChange} />
-                  </div>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>Descripción</label>
-                <textarea name="description" rows="3" value={formData.description} onChange={handleInputChange}></textarea>
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="outline" onClick={() => {setIsModalOpen(false); resetForm();}}>Cancelar</button>
-                <button type="submit">Guardar Evento</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <Modal onClose={closeModal}>
+          <h2 style={{marginBottom: '1.5rem'}}>{selectedEvent ? 'Editar Evento' : 'Nuevo Evento'}</h2>
+          <EventForm 
+            initialData={selectedEvent || {}} 
+            onClose={closeModal} 
+            onSuccess={fetchData} 
+          />
+        </Modal>
       )}
     </div>
   );
