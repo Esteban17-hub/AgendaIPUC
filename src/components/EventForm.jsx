@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Input, Select, Button } from '../components/FormElements'; // assuming you have generic styled inputs, else use native
 
 const EventForm = ({ initialData = {}, onClose, onSuccess }) => {
   const { profile } = useAuth();
@@ -97,9 +96,9 @@ const EventForm = ({ initialData = {}, onClose, onSuccess }) => {
           ))}
         </select>
       </label>
-      <div className="form-actions">
-        <button type="button" className="outline" onClick={onClose} disabled={loading}>Cancelar</button>
-        <button type="submit" className="secondary" disabled={loading}>
+      <div className="form-actions" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+        <button type="button" className="outline" onClick={onClose} disabled={loading} style={{flex: 1}}>Cancelar</button>
+        <button type="submit" className="secondary" disabled={loading} style={{flex: 1}}>
           {loading ? 'Guardando…' : (initialData.id ? 'Actualizar' : 'Crear')}
         </button>
       </div>

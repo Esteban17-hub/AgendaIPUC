@@ -1,0 +1,105 @@
+.calendar-page, .calendar-year-page {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+}
+
+.calendar-title {
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.calendar-header {
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+/* Year Grid */
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.mini-calendar-wrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  background: white;
+}
+
+.mini-calendar-wrapper:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-secondary);
+}
+
+.mini-month-label {
+  text-align: center;
+  font-weight: 700;
+  margin-top: 1rem;
+  color: var(--color-primary);
+  text-transform: capitalize;
+}
+
+/* FullCalendar Customizations */
+.fc {
+  font-family: var(--font-family, inherit);
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-color: var(--color-border) !important;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: var(--color-border) !important;
+}
+
+.fc-col-header-cell {
+  background-color: var(--color-background);
+  padding: 0.5rem 0 !important;
+  color: var(--color-text-main);
+}
+
+.fc-daygrid-day {
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.fc-daygrid-day:hover {
+  background-color: rgba(0, 174, 239, 0.05);
+}
+
+.fc-day-today {
+  background-color: rgba(255, 199, 44, 0.1) !important;
+}
+
+.fc-daygrid-event {
+  background: none;
+  border: none;
+  margin: 1px 2px !important;
+}
+
+.fc-button-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  text-transform: capitalize;
+}
+
+.fc-button-primary:not(:disabled):active,
+.fc-button-primary:not(:disabled).fc-button-active {
+  background-color: var(--color-primary-light) !important;
+  border-color: var(--color-primary-light) !important;
+}
+
+.fc-toolbar-title {
+  text-transform: capitalize;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
