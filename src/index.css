@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap');
+
+:root {
+  /* Paleta Institucional (IPUC) adaptada a Dashboard Moderno */
+  --color-primary: #00338D;
+  --color-primary-light: #0055c4;
+  --color-secondary: #00AEEF;
+  --color-secondary-hover: #0088cc;
+  --color-accent: #FFC72C;
+  
+  --color-white: #FFFFFF;
+  --color-background: #F4F7FE; /* Fondo más suave, estilo admin moderno */
+  --color-surface: #FFFFFF;
+  
+  --color-text-main: #2B3674; /* Texto principal oscuro azulado corporativo */
+  --color-text-muted: #A3AED0; /* Texto secundario gris azulado */
+  --color-border: #E0E5F2;
+  
+  --color-danger: #EE5D50;
+  --color-success: #01B574;
+  
+  /* Radios y Sombras modernos */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 2px 6px rgba(112, 144, 176, 0.08);
+  --shadow-md: 0 10px 20px rgba(112, 144, 176, 0.12);
+  --shadow-lg: 0 18px 40px rgba(112, 144, 176, 0.12);
+  
+  /* Tipografía */
+  font-family: 'Montserrat', 'Open Sans', 'Source Sans Pro', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: var(--color-text-main);
+  background-color: var(--color-background);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--color-secondary);
+  text-decoration: none;
+  font-weight: 500;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-main);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+button {
+  border-radius: var(--radius-sm);
+  border: none;
+  padding: 0.7em 1.5em;
+  font-size: 0.95em;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 51, 141, 0.2);
+}
+button:hover {
+  background-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 51, 141, 0.3);
+}
+button:active {
+  transform: translateY(0);
+}
+button.secondary {
+  background-color: var(--color-secondary);
+  box-shadow: 0 4px 10px rgba(0, 174, 239, 0.2);
+}
+button.secondary:hover {
+  background-color: var(--color-secondary-hover);
+}
+button.outline {
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+button.outline:hover {
+  background-color: rgba(0, 51, 141, 0.05);
+  color: var(--color-primary);
+  transform: translateY(0);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.8em 1em;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s;
+  background-color: var(--color-white);
+  color: var(--color-text-main);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.15);
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--color-text-main);
+}
+
+/* Utils */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0;
+}
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
