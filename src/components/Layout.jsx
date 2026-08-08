@@ -12,7 +12,7 @@ const Layout = () => {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Agenda', href: '/agenda', icon: List },
-    { name: 'Calendario', href: '/calendario', icon: CalendarIcon },
+    { name: 'Calendario', href: '/calendario/mes', icon: CalendarIcon },
     { name: 'Comités', href: '/comites', icon: Users },
     { name: 'Reportes', href: '/reportes', icon: FileText },
   ];
