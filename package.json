@@ -12,7 +12,7 @@
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.21",
     "@fullcalendar/interaction": "^6.1.21",
-    "@fullcalendar/react": "^7.0.2",
+    "@fullcalendar/react": "^6.1.21",
     "@supabase/supabase-js": "^2.112.2",
     "date-fns": "^4.4.0",
     "jspdf": "^4.2.1",

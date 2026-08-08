@@ -1,40 +1,61 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;600&family=Source+Sans+Pro:wght@400;600&display=swap');
 
 :root {
-  /* Paleta Institucional (IPUC) adaptada a Dashboard Moderno */
-  --color-primary: #00338D;
-  --color-primary-light: #0055c4;
-  --color-secondary: #00AEEF;
-  --color-secondary-hover: #0088cc;
-  --color-accent: #FFC72C;
-  
-  --color-white: #FFFFFF;
-  --color-background: #F4F7FE; /* Fondo más suave, estilo admin moderno */
-  --color-surface: #FFFFFF;
-  
-  --color-text-main: #2B3674; /* Texto principal oscuro azulado corporativo */
-  --color-text-muted: #A3AED0; /* Texto secundario gris azulado */
-  --color-border: #E0E5F2;
-  
-  --color-danger: #EE5D50;
-  --color-success: #01B574;
-  
-  /* Radios y Sombras modernos */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 2px 6px rgba(112, 144, 176, 0.08);
-  --shadow-md: 0 10px 20px rgba(112, 144, 176, 0.12);
-  --shadow-lg: 0 18px 40px rgba(112, 144, 176, 0.12);
-  
-  /* Tipografía */
-  font-family: 'Montserrat', 'Open Sans', 'Source Sans Pro', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  --font-family: 'Montserrat', sans-serif;
+  --font-body: 'Open Sans', sans-serif;
+  --font-heading: 'Source Sans Pro', sans-serif;
 
-  color-scheme: light;
-  color: var(--color-text-main);
-  background-color: var(--color-background);
+  /* Tema Claro - Transparencia Glassmorphic Realista (45% opacidad) */
+  --color-background: #EAF0F8;
+  --color-surface: rgba(255, 255, 255, 0.45);
+  --color-surface-solid: #FFFFFF;
+  --color-border: rgba(255, 255, 255, 0.8);
+  --color-input-bg: rgba(255, 255, 255, 0.65);
+  --color-input-border: #94A3B8;
+  --color-text-main: #0F172A;
+  --color-text-muted: #475569;
+  
+  --color-primary: #00338D;       /* Azul IPUC */
+  --color-primary-light: #0056D6;
+  --color-secondary: #00AEEF;     /* Cyan IPUC */
+  --color-accent: #FFC72C;        /* Amarillo IPUC */
+  --color-danger: #EF4444;
+
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.35) 100%);
+  --glass-border: 1.5px solid rgba(255, 255, 255, 0.85);
+  --glass-shadow: 
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.9),
+    0 12px 36px 0 rgba(0, 51, 141, 0.1);
+  --glass-blur: blur(16px);
+
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+}
+
+[data-theme="dark"] {
+  /* Tema Oscuro - Transparencia Glassmorphic Profunda (40% opacidad) */
+  --color-background: #060A12;
+  --color-surface: rgba(18, 27, 46, 0.42);
+  --color-surface-solid: #121B2D;
+  --color-border: rgba(255, 255, 255, 0.18);
+  --color-input-bg: rgba(10, 16, 28, 0.65);
+  --color-input-border: rgba(0, 174, 239, 0.4);
+  --color-text-main: #FFFFFF;
+  --color-text-muted: #CBD5E1;
+
+  --color-primary: #0066FF;
+  --color-primary-light: #3B82F6;
+  --color-secondary: #00AEEF;
+  --color-accent: #FFC72C;
+  --color-danger: #F87171;
+
+  --glass-bg: linear-gradient(135deg, rgba(24, 37, 62, 0.45) 0%, rgba(10, 16, 28, 0.38) 100%);
+  --glass-border: 1.5px solid rgba(255, 255, 255, 0.22);
+  --glass-shadow: 
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.3),
+    0 16px 45px rgba(0, 0, 0, 0.6);
+  --glass-blur: blur(16px);
 }
 
 * {
@@ -44,108 +65,117 @@
 }
 
 body {
+  font-family: var(--font-body);
   background-color: var(--color-background);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(0, 102, 255, 0.35) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(0, 174, 239, 0.35) 0%, transparent 40%),
+    radial-gradient(circle at 50% 30%, rgba(255, 199, 44, 0.15) 0%, transparent 50%);
+  background-attachment: fixed;
   color: var(--color-text-main);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  color: var(--color-secondary);
-  text-decoration: none;
-  font-weight: 500;
-}
-a:hover {
-  text-decoration: underline;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color: var(--color-text-main);
-  margin-bottom: 0.5rem;
+  font-family: var(--font-family);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+}
+
+/* Glassmorphism Containers con Transparencia Auténtica */
+.glass-card, .stat-card, .event-card, .committee-card, .report-card, .calendar-page, .calendar-year-page {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  border-radius: var(--radius-md) !important;
 }
 
 button {
-  border-radius: var(--radius-sm);
-  border: none;
-  padding: 0.7em 1.5em;
-  font-size: 0.95em;
-  font-weight: 600;
-  font-family: inherit;
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  font-family: var(--font-family);
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 51, 141, 0.2);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  background-color: var(--color-primary);
+  color: #FFFFFF;
 }
+
 button:hover {
   background-color: var(--color-primary-light);
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 51, 141, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 102, 255, 0.4);
 }
-button:active {
-  transform: translateY(0);
-}
+
 button.secondary {
   background-color: var(--color-secondary);
-  box-shadow: 0 4px 10px rgba(0, 174, 239, 0.2);
+  color: #FFFFFF;
 }
+
 button.secondary:hover {
-  background-color: var(--color-secondary-hover);
+  opacity: 0.95;
+  box-shadow: 0 8px 24px rgba(0, 174, 239, 0.4);
 }
+
 button.outline {
-  background-color: transparent;
-  border: 1px solid var(--color-primary);
-  color: var(--color-primary);
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-main);
 }
+
 button.outline:hover {
-  background-color: rgba(0, 51, 141, 0.05);
-  color: var(--color-primary);
-  transform: translateY(0);
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 0.8em 1em;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 0.95rem;
-  margin-bottom: 1rem;
-  transition: all 0.2s;
-  background-color: var(--color-white);
-  color: var(--color-text-main);
-}
-input:focus, select:focus, textarea:focus {
-  outline: none;
+  background: rgba(0, 174, 239, 0.2);
   border-color: var(--color-secondary);
-  box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.15);
 }
 
-label {
-  display: block;
+/* CAMPOS DE ENTRADA Y SELECCIÓN CON TRANSPARENCIA VIBRANTE */
+input, select, textarea {
+  font-family: var(--font-body);
+  background-color: var(--color-input-bg) !important;
+  color: var(--color-text-main) !important;
+  border: 1.8px solid var(--color-input-border) !important;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  outline: none;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--color-text-main);
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
 }
 
-/* Utils */
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0;
+input:hover, select:hover, textarea:hover {
+  border-color: var(--color-secondary) !important;
 }
-.card {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 3.5px rgba(0, 174, 239, 0.4) !important;
 }
+
+/* Recuadros de Selección Destacados */
+.filter-box, .search-box, select {
+  border: 1.8px solid var(--color-secondary) !important;
+  box-shadow: 0 4px 16px rgba(0, 174, 239, 0.2);
+}
+
+select option {
+  background-color: var(--color-surface-solid);
+  color: var(--color-text-main);
+  padding: 10px;
+}
+
 .flex-center {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--color-text-muted);
 }

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Calendar as CalendarIcon, Users, Clock, MapPin, ChevronRight, Activity, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Clock, MapPin, ChevronRight, Activity, Plus, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import EventForm from '../components/EventForm';
+import { Modal } from '../components/Modal';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -10,14 +12,14 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ total: 0, month: 0, committees: 0 });
   const [nextEvent, setNextEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (authLoading) return; // wait until auth finishes
-    
+    if (authLoading) return;
     if (profile?.congregation_id) {
       fetchDashboardData();
     } else {
-      setLoading(false); // No congregation or profile = stop loading
+      setLoading(false);
     }
   }, [profile, authLoading]);
 
@@ -46,7 +48,7 @@ const Dashboard = () => {
         .order('date', { ascending: true })
         .order('time', { ascending: true })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       // Events this month
       const startOfMonth = new Date();
@@ -74,33 +76,44 @@ const Dashboard = () => {
   };
 
   if (authLoading || loading) {
-    return <div className="loading-state">Cargando panel corporativo...</div>;
+    return <div className="loading-state">Cargando Inicio...</div>;
   }
 
-  // Handle case where profile exists but has no congregation_id
   if (profile && !profile.congregation_id) {
     return (
-      <div className="dashboard-page flex-center" style={{flexDirection: 'column', textAlign: 'center', padding: '4rem'}}>
-        <AlertCircle size={48} color="var(--color-warning)" style={{marginBottom: '1rem'}} />
-        <h2 style={{marginBottom: '1rem'}}>Falta configurar tu congregación</h2>
-        <p style={{color: 'var(--color-text-muted)', maxWidth: '500px'}}>
-          Tu cuenta ha sido creada exitosamente pero aún no tienes una congregación asignada en la base de datos. 
-          Pídele al administrador principal que te asigne una congregación o revisa la configuración en Supabase.
+      <div className="dashboard-page flex-center" style={{ flexDirection: 'column', textAlign: 'center', padding: '4rem' }}>
+        <AlertCircle size={48} color="var(--color-accent)" style={{ marginBottom: '1rem' }} />
+        <h2 style={{ marginBottom: '1rem' }}>Falta configurar tu congregación</h2>
+        <p style={{ color: 'var(--color-text-muted)', maxWidth: '500px', marginBottom: '1.5rem' }}>
+          Tu cuenta ha sido creada exitosamente pero aún no tienes una congregación asignada.
         </p>
+        <Link to="/configuracion">
+          <button className="secondary">Configurar Congregación Ahora</button>
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-header">
-        <h1>Bienvenido, {profile?.full_name?.split(' ')[0] || 'Administrador'}</h1>
-        <p>Panel de control corporativo - {profile?.congregations?.name}</p>
+      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', margin: 0 }}>Inicio</h1>
+          <p style={{ color: 'var(--color-text-muted)', margin: '4px 0 0 0' }}>
+            Bienvenido, {profile?.full_name?.split(' ')[0] || 'Administrador'} - {profile?.congregations?.name || 'Congregación IPUC'}
+          </p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '10px', fontSize: '1rem' }}
+        >
+          <Plus size={20} /> Agregar Evento
+        </button>
       </div>
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: 'rgba(0, 174, 239, 0.1)', color: 'var(--color-secondary)' }}>
+          <div className="stat-icon" style={{ backgroundColor: 'rgba(0, 174, 239, 0.15)', color: 'var(--color-secondary)' }}>
             <CalendarIcon size={28} />
           </div>
           <div className="stat-info">
@@ -120,7 +133,7 @@ const Dashboard = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: 'rgba(0, 51, 141, 0.1)', color: 'var(--color-primary)' }}>
+          <div className="stat-icon" style={{ backgroundColor: 'rgba(0, 102, 255, 0.15)', color: 'var(--color-primary)' }}>
             <Users size={28} />
           </div>
           <div className="stat-info">
@@ -131,51 +144,61 @@ const Dashboard = () => {
       </div>
 
       <div className="dashboard-main-grid">
-        <div className="chart-card">
+        <div className="chart-card" style={{ background: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
           <h3>Resumen de Actividad</h3>
-          <div className="flex-center" style={{ height: '250px', background: '#f8f9fc', borderRadius: '8px', border: '1px dashed #e2e8f0' }}>
-            <p style={{ color: 'var(--color-text-muted)' }}>El gráfico anual se habilitará pronto...</p>
+          <div className="flex-center" style={{ height: '240px', background: 'rgba(0,0,0,0.02)', borderRadius: '8px', border: '1px dashed var(--color-border)', marginTop: '1rem' }}>
+            <p style={{ color: 'var(--color-text-muted)' }}>Panel corporativo activo y actualizado.</p>
           </div>
         </div>
 
         <div>
           {nextEvent ? (
-            <div className="next-event-card">
-              <div className="next-event-label">Próximo Evento Destacado</div>
-              <h2 className="next-event-title">{nextEvent.name}</h2>
-              <div style={{ marginTop: '1.5rem' }}>
-                <div className="next-event-detail">
+            <div className="next-event-card" style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)', padding: '1.5rem', borderRadius: 'var(--radius-md)', color: '#fff' }}>
+              <div className="next-event-label" style={{ fontSize: '0.8rem', textTransform: 'uppercase', tracking: '1px', opacity: 0.8 }}>Próximo Evento Destacado</div>
+              <h2 className="next-event-title" style={{ marginTop: '0.5rem', fontSize: '1.5rem' }}>{nextEvent.name}</h2>
+              <div style={{ marginTop: '1.2rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="next-event-detail" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <CalendarIcon size={16} /> 
                   <span>{new Date(nextEvent.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}</span>
                 </div>
-                <div className="next-event-detail">
+                <div className="next-event-detail" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Clock size={16} /> 
-                  <span>{nextEvent.time.substring(0,5)}</span>
+                  <span>{nextEvent.time ? nextEvent.time.substring(0,5) : '19:00'}</span>
                 </div>
-                <div className="next-event-detail">
+                <div className="next-event-detail" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <MapPin size={16} /> 
                   <span>{nextEvent.location}</span>
                 </div>
-                <div className="next-event-detail">
+                <div className="next-event-detail" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Users size={16} /> 
-                  <span>Comité: {nextEvent.committees?.name}</span>
+                  <span>Comité: {nextEvent.committees?.name || 'General'}</span>
                 </div>
               </div>
-              <Link to="/agenda" style={{ display: 'inline-flex', alignItems: 'center', marginTop: '1.5rem', color: 'white', fontWeight: 'bold' }}>
+              <Link to="/agenda" style={{ display: 'inline-flex', alignItems: 'center', marginTop: '1.5rem', color: '#fff', fontWeight: 'bold', textDecoration: 'none' }}>
                 Ver agenda completa <ChevronRight size={18} />
               </Link>
             </div>
           ) : (
-            <div className="empty-dashboard">
+            <div className="empty-dashboard" style={{ background: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--color-border)' }}>
               <h3>No hay eventos próximos</h3>
               <p style={{ marginBottom: '1.5rem', color: 'var(--color-text-muted)' }}>Planifica la próxima actividad de la congregación.</p>
-              <Link to="/agenda">
-                <button>Ir a la Agenda</button>
-              </Link>
+              <button onClick={() => setIsModalOpen(true)}>
+                Agregar Evento
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      {isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <h2 style={{ marginBottom: '1.5rem' }}>Nuevo Evento</h2>
+          <EventForm 
+            onClose={() => setIsModalOpen(false)} 
+            onSuccess={fetchDashboardData} 
+          />
+        </Modal>
+      )}
     </div>
   );
 };

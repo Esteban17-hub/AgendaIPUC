@@ -6,24 +6,30 @@ export const Modal = ({ children, onClose }) => {
       style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(4px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 9999
+        zIndex: 9999,
+        padding: '1rem'
       }}
       onClick={onClose}
     >
       <div 
         style={{
-          background: 'white',
-          padding: '2rem',
-          borderRadius: '14px',
-          width: '90%',
-          maxWidth: '500px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-          position: 'relative'
+          background: 'var(--color-surface)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: 'var(--glass-border)',
+          padding: '2.2rem',
+          borderRadius: 'var(--radius-md)',
+          width: '100%',
+          maxWidth: '520px',
+          boxShadow: 'var(--glass-shadow)',
+          position: 'relative',
+          color: 'var(--color-text-main)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -31,15 +37,16 @@ export const Modal = ({ children, onClose }) => {
           onClick={onClose} 
           style={{
             position: 'absolute',
-            top: '15px',
-            right: '15px',
+            top: '18px',
+            right: '18px',
             background: 'transparent',
-            color: '#666',
+            color: 'var(--color-text-muted)',
             border: 'none',
-            fontSize: '1.5rem',
+            fontSize: '1.6rem',
             cursor: 'pointer',
             padding: 0,
-            boxShadow: 'none'
+            boxShadow: 'none',
+            lineHeight: 1
           }}
         >
           &times;

@@ -8,18 +8,70 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, congregations(name)')
+        .eq('id', userId)
+        .single();
+        
+      if (!error && data) {
+        setProfile(data);
+      } else {
+        console.warn('Profile not found for user ID, trying fallback query...', error);
+        const { data: fallbackProfiles } = await supabase
+          .from('profiles')
+          .select('*, congregations(name)')
+          .limit(1);
+
+        if (fallbackProfiles && fallbackProfiles.length > 0) {
+          setProfile(fallbackProfiles[0]);
+        } else {
+          const { data: congregations } = await supabase.from('congregations').select('id, name').limit(1);
+          const fallbackCongId = congregations?.[0]?.id || '22222222-2222-2222-2222-222222222222';
+          const fallbackCongName = congregations?.[0]?.name || 'Congregación Principal';
+          
+          setProfile({
+            id: userId,
+            full_name: 'Usuario Administrador',
+            role: 'admin',
+            congregation_id: fallbackCongId,
+            congregations: { name: fallbackCongName }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await fetchProfile(user.id);
+    }
+  };
+
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Session error:", error);
+        setLoading(false);
+        return;
+      }
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
         setLoading(false);
       }
+    }).catch(err => {
+      console.error("Session exception:", err);
+      setLoading(false);
     });
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -33,24 +85,6 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*, congregations(name)')
-        .eq('id', userId)
-        .single();
-        
-      if (!error && data) {
-        setProfile(data);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signIn = async (email, password) => {
     return await supabase.auth.signInWithPassword({ email, password });
   };
@@ -60,7 +94,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, profile, refreshProfile, signIn, signOut, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

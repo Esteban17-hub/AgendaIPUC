@@ -1,20 +1,23 @@
 .calendar-page, .calendar-year-page {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  padding: 2rem;
-  box-shadow: var(--shadow-sm);
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: var(--glass-border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 1.8rem;
+  box-shadow: var(--glass-shadow) !important;
   margin-bottom: 2rem;
 }
 
 .calendar-title {
   color: var(--color-primary);
   margin-bottom: 1.5rem;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
 }
 
 .calendar-header {
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 /* Year Grid */
@@ -25,18 +28,19 @@
 }
 
 .mini-calendar-wrapper {
-  border: 1px solid var(--color-border);
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  border: var(--glass-border) !important;
   border-radius: var(--radius-sm);
   padding: 1rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s, box-shadow 0.25s;
   cursor: pointer;
-  background: white;
 }
 
 .mini-calendar-wrapper:hover {
   transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-secondary);
+  box-shadow: 0 12px 30px rgba(0, 174, 239, 0.3) !important;
+  border-color: var(--color-secondary) !important;
 }
 
 .mini-month-label {
@@ -50,6 +54,7 @@
 /* FullCalendar Customizations */
 .fc {
   font-family: var(--font-family, inherit);
+  color: var(--color-text-main) !important;
 }
 
 .fc-theme-standard .fc-scrollgrid {
@@ -61,9 +66,20 @@
 }
 
 .fc-col-header-cell {
-  background-color: var(--color-background);
-  padding: 0.5rem 0 !important;
-  color: var(--color-text-main);
+  background-color: rgba(0, 102, 255, 0.08) !important;
+  padding: 0.6rem 0 !important;
+  color: var(--color-text-main) !important;
+  font-weight: 700;
+}
+
+/* HIGHLIGHT SUNDAY COLUMNS (DOMINGOS EN COLOR DISTINTO) */
+.fc-day-sun {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+.fc-col-header-cell.fc-day-sun {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: var(--color-danger) !important;
 }
 
 .fc-daygrid-day {
@@ -72,17 +88,17 @@
 }
 
 .fc-daygrid-day:hover {
-  background-color: rgba(0, 174, 239, 0.05);
+  background-color: rgba(0, 174, 239, 0.12) !important;
 }
 
 .fc-day-today {
-  background-color: rgba(255, 199, 44, 0.1) !important;
+  background-color: rgba(255, 199, 44, 0.2) !important;
 }
 
 .fc-daygrid-event {
   background: none;
   border: none;
-  margin: 1px 2px !important;
+  margin: 2px 2px !important;
 }
 
 .fc-button-primary {
@@ -101,5 +117,5 @@
 .fc-toolbar-title {
   text-transform: capitalize;
   font-weight: 700;
-  color: var(--color-text-main);
+  color: var(--color-text-main) !important;
 }
