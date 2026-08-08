@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Calendar as CalendarIcon, Users, Clock, MapPin, ChevronRight, Activity } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Clock, MapPin, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({ total: 0, month: 0, committees: 0 });
   const [nextEvent, setNextEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return; // wait until auth finishes
+    
     if (profile?.congregation_id) {
       fetchDashboardData();
+    } else {
+      setLoading(false); // No congregation or profile = stop loading
     }
-  }, [profile]);
+  }, [profile, authLoading]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -69,8 +73,22 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return <div className="loading-state">Cargando panel corporativo...</div>;
+  }
+
+  // Handle case where profile exists but has no congregation_id
+  if (profile && !profile.congregation_id) {
+    return (
+      <div className="dashboard-page flex-center" style={{flexDirection: 'column', textAlign: 'center', padding: '4rem'}}>
+        <AlertCircle size={48} color="var(--color-warning)" style={{marginBottom: '1rem'}} />
+        <h2 style={{marginBottom: '1rem'}}>Falta configurar tu congregación</h2>
+        <p style={{color: 'var(--color-text-muted)', maxWidth: '500px'}}>
+          Tu cuenta ha sido creada exitosamente pero aún no tienes una congregación asignada en la base de datos. 
+          Pídele al administrador principal que te asigne una congregación o revisa la configuración en Supabase.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -128,7 +146,7 @@ const Dashboard = () => {
               <div style={{ marginTop: '1.5rem' }}>
                 <div className="next-event-detail">
                   <CalendarIcon size={16} /> 
-                  <span>{new Date(nextEvent.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                  <span>{new Date(nextEvent.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}</span>
                 </div>
                 <div className="next-event-detail">
                   <Clock size={16} /> 
