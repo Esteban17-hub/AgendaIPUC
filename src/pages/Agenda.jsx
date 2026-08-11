@@ -23,6 +23,8 @@ const Agenda = () => {
   useEffect(() => {
     if (profile?.congregation_id) {
       fetchData();
+    } else {
+      setLoading(false);
     }
   }, [profile]);
 
@@ -54,8 +56,12 @@ const Agenda = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar este evento?')) {
-      await supabase.from('events').delete().eq('id', id);
-      fetchData();
+      try {
+        await supabase.from('events').delete().eq('id', id);
+        fetchData();
+      } catch (err) {
+        console.error('Error deleting event:', err);
+      }
     }
   };
 
@@ -76,7 +82,7 @@ const Agenda = () => {
 
   // Filter the events
   const filteredEvents = events.filter(event => {
-    const searchMatch = event.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const searchMatch = (event.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
                         (event.location && event.location.toLowerCase().includes(searchQuery.toLowerCase()));
     const committeeMatch = filterCommittee ? event.committee_id === filterCommittee : true;
     return searchMatch && committeeMatch;

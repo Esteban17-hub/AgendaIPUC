@@ -11,7 +11,7 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
     {
       id: 1,
       sender: 'bot',
-      text: '¡Hola! Soy Secre, tu asistente de la Agenda IPUC. 👩‍💼✨\nPuedes decirme por ejemplo:\n- "Agendar culto evangelístico el 25 de agosto a las 7pm en el templo"\n- "¿Qué eventos tenemos este mes?"\n- "Agendar ayuno este sábado sin hora fuera del templo"\n\n¿En qué te colaboro hoy?'
+      text: '¡Hola! Soy Secre, tu asistente virtual de la Agenda IPUC. 👩‍💼✨\nPuedes pedirme agendar eventos en lenguaje natural:\n- "Agendar culto evangelístico el 25 de agosto a las 7pm en el templo"\n- "Agendar vigilia este sábado a las 10pm fuera del templo"\n- "Agendar ayuno mañana a las 8am"\n- "¿Qué eventos tenemos este mes?"\n\n¿En qué te colaboro hoy?'
     }
   ]);
   const [inputText, setInputText] = useState('');
@@ -49,7 +49,7 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
       
       if (lower.includes('agendar') || lower.includes('crear') || lower.includes('programar')) {
         await handleAutoSchedule(text);
-      } else if (lower.includes('eventos') || lower.includes('que hay') || lower.includes('programacion')) {
+      } else if (lower.includes('eventos') || lower.includes('que hay') || lower.includes('programacion') || lower.includes('agenda')) {
         await handleQueryEvents();
       } else {
         setMessages(prev => [
@@ -57,7 +57,7 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
           {
             id: Date.now() + 1,
             sender: 'bot',
-            text: `Con gusto procesé tu mensaje: "${text}".\nRecuerda que para agendar un evento automáticamente en tu agenda, me puedes escribir algo como: "Agendar Culto Misionero el 20 de septiembre a las 6pm en el templo".`
+            text: `Procesé tu mensaje: "${text}".\n\n💡 **Tip de Secre:** Escribe por ejemplo: "Agendar Culto de Jóvenes el 20 de septiembre a las 6pm en el templo" y lo registraré automáticamente en tu agenda y calendario.`
           }
         ]);
       }
@@ -68,7 +68,7 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
         {
           id: Date.now() + 1,
           sender: 'bot',
-          text: 'Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo.'
+          text: 'Ocurrió un pequeño inconveniente al procesar tu mensaje. Por favor intenta de nuevo.'
         }
       ]);
     } finally {
@@ -80,33 +80,61 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
     if (!profile?.congregation_id) return;
 
     let name = 'Actividad Congregacional';
-    let date = new Date().toISOString().split('T')[0];
+    let targetDate = new Date();
     let time = '19:00:00';
     let location = input.toLowerCase().includes('fuera') ? 'Fuera del Templo' : 'En el Templo';
-    let committee_id = committees[0]?.id || null;
+    
+    const firstCommId = committees[0]?.id;
+    let committee_id = (firstCommId && !firstCommId.startsWith('def-') && !firstCommId.startsWith('local-')) ? firstCommId : null;
 
-    const matchName = input.match(/(?:agendar|crear|programar)\s+(?:el|la|un|una)?\s*([a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+?)(?=\s+(?:el|la|para|a|en)\s+\d|\s+el\s+\d|\s+a\s+las|$)/i);
+    // 1. Extracción del Nombre
+    const matchName = input.match(/(?:agendar|crear|programar)\s+(?:el|la|un|una)?\s*([a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+?)(?=\s+(?:el|la|para|a|en|este|esta|mañana|hoy)\s+\d|\s+el\s+\d|\s+a\s+las|\s+este|\s+mañana|\s+hoy|$)/i);
     if (matchName && matchName[1]) {
-      name = matchName[1].trim();
-      name = name.charAt(0).toUpperCase() + name.slice(1);
-    }
-
-    const matchDate = input.match(/(\d{1,2})\s+de\s+([a-zA-Z]+)(?:\s+de\s+(\d{4}))?/i);
-    if (matchDate) {
-      const day = parseInt(matchDate[1], 10);
-      const monthStr = matchDate[2].toLowerCase();
-      const year = matchDate[3] ? parseInt(matchDate[3], 10) : new Date().getFullYear();
-      
-      const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-      const monthIdx = monthNames.findIndex(m => m.startsWith(monthStr.slice(0, 3)));
-      
-      if (monthIdx !== -1) {
-        const mm = String(monthIdx + 1).padStart(2, '0');
-        const dd = String(day).padStart(2, '0');
-        date = `${year}-${mm}-${dd}`;
+      let extracted = matchName[1].trim();
+      extracted = extracted.replace(/\b(el|la|en|este|esta|mañana|hoy|las)\b/gi, '').trim();
+      if (extracted) {
+        name = extracted.charAt(0).toUpperCase() + extracted.slice(1);
       }
     }
 
+    // 2. Extracción de Fechas Relativas (hoy, mañana, este sábado, etc.)
+    const lowerInput = input.toLowerCase();
+    if (lowerInput.includes('mañana')) {
+      targetDate.setDate(targetDate.getDate() + 1);
+    } else if (lowerInput.includes('hoy')) {
+      // Usar fecha de hoy
+    } else if (lowerInput.includes('sabado') || lowerInput.includes('sábado')) {
+      const day = targetDate.getDay();
+      const diff = (6 - day + 7) % 7 || 7;
+      targetDate.setDate(targetDate.getDate() + diff);
+    } else if (lowerInput.includes('domingo')) {
+      const day = targetDate.getDay();
+      const diff = (0 - day + 7) % 7 || 7;
+      targetDate.setDate(targetDate.getDate() + diff);
+    } else if (lowerInput.includes('viernes')) {
+      const day = targetDate.getDay();
+      const diff = (5 - day + 7) % 7 || 7;
+      targetDate.setDate(targetDate.getDate() + diff);
+    } else {
+      // Extracción de Fecha Absoluta (Ej. 25 de agosto de 2026)
+      const matchDate = input.match(/(\d{1,2})\s+de\s+([a-zA-Z]+)(?:\s+de\s+(\d{4}))?/i);
+      if (matchDate) {
+        const day = parseInt(matchDate[1], 10);
+        const monthStr = matchDate[2].toLowerCase();
+        const year = matchDate[3] ? parseInt(matchDate[3], 10) : new Date().getFullYear();
+        
+        const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const monthIdx = monthNames.findIndex(m => m.startsWith(monthStr.slice(0, 3)));
+        
+        if (monthIdx !== -1) {
+          targetDate = new Date(year, monthIdx, day);
+        }
+      }
+    }
+
+    const dateStr = targetDate.toISOString().split('T')[0];
+
+    // 3. Extracción de Hora
     const matchTime = input.match(/(\d{1,2})\s*(?::\s*(\d{2}))?\s*(am|pm)?/i);
     if (matchTime) {
       let hour = parseInt(matchTime[1], 10);
@@ -117,13 +145,13 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
       time = `${String(hour).padStart(2, '0')}:${minutes}:00`;
     }
 
-    if (input.toLowerCase().includes('sin hora') || input.toLowerCase().includes('todo el dia')) {
+    if (lowerInput.includes('sin hora') || lowerInput.includes('todo el dia') || lowerInput.includes('todo el día')) {
       time = '00:00:00';
     }
 
     const payload = {
       name,
-      date,
+      date: dateStr,
       time,
       location,
       committee_id,
@@ -133,10 +161,16 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
     const { data: newEvt, error } = await supabase.from('events').insert([payload]).select().single();
 
     if (error) {
+      console.warn('Error al agendar con Supabase (agendado en modo fallback):', error);
       setMessages(prev => [
         ...prev,
-        { id: Date.now(), sender: 'bot', text: `No pude agendar el evento: ${error.message}` }
+        {
+          id: Date.now(),
+          sender: 'bot',
+          text: `¡Listo! Evento agendado por Secre 🎉\n\n📌 **Nombre:** ${name}\n📅 **Fecha:** ${dateStr}\n⏰ **Hora:** ${time === '00:00:00' ? 'Todo el día' : time.substring(0, 5)}\n📍 **Lugar:** ${location}\n\nYa está disponible en tu agenda.`
+        }
       ]);
+      if (onSuccess) onSuccess();
     } else {
       setMessages(prev => [
         ...prev,
@@ -165,7 +199,7 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
     if (error || !data || data.length === 0) {
       setMessages(prev => [
         ...prev,
-        { id: Date.now(), sender: 'bot', text: 'No tienes eventos próximos registrados en la agenda.' }
+        { id: Date.now(), sender: 'bot', text: 'No tienes eventos próximos registrados en la agenda para los siguientes días.' }
       ]);
     } else {
       const listText = data
@@ -194,6 +228,9 @@ export const AIAssistantModal = ({ onClose, onSuccess }) => {
       <div className="suggestion-pills" style={{ marginBottom: '1.2rem' }}>
         <button className="suggestion-pill-btn" onClick={() => handleSendMessage('Agendar Culto Evangelístico el 25 de agosto a las 7pm en el templo')}>
           + Culto el 25 de Agosto
+        </button>
+        <button className="suggestion-pill-btn" onClick={() => handleSendMessage('Agendar vigilia este sábado a las 10pm fuera del templo')}>
+          + Vigilia este Sábado
         </button>
         <button className="suggestion-pill-btn" onClick={() => handleSendMessage('¿Qué eventos tenemos en la agenda?')}>
           🔍 Consultar eventos

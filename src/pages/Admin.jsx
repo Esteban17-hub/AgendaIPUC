@@ -20,6 +20,28 @@ export const saveStoredCongregations = (list) => {
   } catch (e) {}
 };
 
+export const getStoredUsers = () => {
+  try {
+    const local = localStorage.getItem('custom_users');
+    if (local) return JSON.parse(local);
+  } catch (e) {}
+  return [
+    {
+      id: 'default-admin-id',
+      full_name: 'Usuario Administrador Principal',
+      role: 'superadmin',
+      congregation_id: '22222222-2222-2222-2222-222222222222',
+      congregations: { id: '22222222-2222-2222-2222-222222222222', name: 'Congregación Principal' }
+    }
+  ];
+};
+
+export const saveStoredUsers = (list) => {
+  try {
+    localStorage.setItem('custom_users', JSON.stringify(list));
+  } catch (e) {}
+};
+
 const Admin = () => {
   const { profile, switchActiveCongregation } = useAuth();
   const [congregations, setCongregations] = useState([]);
@@ -51,30 +73,40 @@ const Admin = () => {
     setLoading(true);
     try {
       // 1. Obtener congregaciones de Supabase + LocalStorage
-      const localList = getStoredCongregations();
-      let mergedCongs = [...localList];
+      const localCongs = getStoredCongregations();
+      let mergedCongs = [...localCongs];
 
       const { data: dbCongs, error: congErr } = await supabase.from('congregations').select('id, name').order('name');
       if (!congErr && dbCongs && dbCongs.length > 0) {
-        // Mezclar sin duplicados
         dbCongs.forEach(c => {
           if (!mergedCongs.some(lc => lc.id === c.id)) {
             mergedCongs.push(c);
           }
         });
       }
-
       saveStoredCongregations(mergedCongs);
 
-      // 2. Obtener todos los perfiles de usuario
+      // 2. Obtener usuarios de Supabase + LocalStorage
+      const localUsers = getStoredUsers();
+      let mergedUsers = [...localUsers];
+
       const { data: profs } = await supabase
         .from('profiles')
         .select('*, congregations(id, name)')
         .order('full_name');
 
+      if (profs && profs.length > 0) {
+        profs.forEach(p => {
+          if (!mergedUsers.some(lu => lu.id === p.id)) {
+            mergedUsers.push(p);
+          }
+        });
+      }
+      saveStoredUsers(mergedUsers);
+
       // 3. Contar usuarios por congregación
       const counts = {};
-      (profs || []).forEach(p => {
+      mergedUsers.forEach(p => {
         if (p.congregation_id) {
           counts[p.congregation_id] = (counts[p.congregation_id] || 0) + 1;
         }
@@ -87,7 +119,8 @@ const Admin = () => {
       }));
 
       setCongregations(formattedCongs);
-      setUsers(profs || []);
+      setUsers(mergedUsers);
+
       if (formattedCongs.length > 0 && !userForm.congregation_id) {
         setUserForm(prev => ({ ...prev, congregation_id: formattedCongs[0].id }));
       }
@@ -131,7 +164,7 @@ const Admin = () => {
       setIsCongModalOpen(false);
       setCongForm({ id: null, name: '' });
       
-      // Actualizar estado inmediatamente
+      // Actualizar vista inmediatamente
       const counts = {};
       users.forEach(p => {
         if (p.congregation_id) counts[p.congregation_id] = (counts[p.congregation_id] || 0) + 1;
@@ -168,21 +201,44 @@ const Admin = () => {
       if (signUpError) console.warn(signUpError);
 
       const userId = authData?.user?.id || `usr-${Date.now()}`;
-      const newProfile = {
+      
+      // Objeto limpio para Supabase (Sin relacion virtual 'congregations')
+      const payloadToDb = {
         id: userId,
         full_name: userForm.full_name,
         role: userForm.role,
-        congregation_id: userForm.congregation_id,
+        congregation_id: userForm.congregation_id
+      };
+
+      const { error: upsertErr } = await supabase.from('profiles').upsert(payloadToDb);
+      if (upsertErr) console.warn('Supabase upsert warning:', upsertErr);
+
+      // Objeto completo para el estado local
+      const newUserObj = {
+        ...payloadToDb,
         congregations: { id: userForm.congregation_id, name: selectedCong?.name || 'Congregación' }
       };
 
-      await supabase.from('profiles').upsert(newProfile);
+      const currentUsers = getStoredUsers();
+      const updatedUsers = [...currentUsers, newUserObj];
+      saveStoredUsers(updatedUsers);
 
-      setUsers(prev => [...prev, newProfile]);
-      setMessage(`Usuario "${userForm.full_name}" asignado a "${selectedCong?.name || 'Congregación'}".`);
+      setUsers(updatedUsers);
+
+      // Recalcular conteo de usuarios
+      const counts = {};
+      updatedUsers.forEach(p => {
+        if (p.congregation_id) counts[p.congregation_id] = (counts[p.congregation_id] || 0) + 1;
+      });
+      setCongregations(prev => prev.map(c => ({
+        ...c,
+        userCount: counts[c.id] || 0,
+        isFull: (counts[c.id] || 0) >= 2
+      })));
+
+      setMessage(`¡Usuario "${userForm.full_name}" creado y asignado a "${selectedCong?.name || 'Congregación'}"!`);
       setIsUserModalOpen(false);
       setUserForm({ email: '', password: '', full_name: '', role: 'user', congregation_id: congregations[0]?.id || '' });
-      fetchAdminData();
     } catch (err) {
       console.error('Error al crear usuario:', err);
       setIsUserModalOpen(false);

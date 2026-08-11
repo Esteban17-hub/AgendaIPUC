@@ -11,7 +11,7 @@ const MONTHS = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-const YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
+const YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
 
 const Reports = () => {
   const { profile } = useAuth();
@@ -45,7 +45,7 @@ const Reports = () => {
 
       const { data, error } = await supabase
         .from('events')
-        .select('name, date, time, location, description, committees(name)')
+        .select('name, date, time, location, committees(name)')
         .eq('congregation_id', profile.congregation_id)
         .gte('date', start)
         .lte('date', end)
@@ -71,7 +71,7 @@ const Reports = () => {
 
       const rows = (data || []).map(ev => [
         ev.date,
-        ev.time ? ev.time.substring(0, 5) : '19:00',
+        ev.time && ev.time !== '00:00:00' ? ev.time.substring(0, 5) : 'Todo el día',
         ev.name,
         ev.committees?.name || 'General',
         ev.location || 'En el Templo'
@@ -130,7 +130,7 @@ const Reports = () => {
 
       const rows = (data || []).map(ev => [
         ev.date,
-        ev.time ? ev.time.substring(0, 5) : '19:00',
+        ev.time && ev.time !== '00:00:00' ? ev.time.substring(0, 5) : 'Todo el día',
         ev.name,
         ev.committees?.name || 'General',
         ev.location || 'En el Templo'
@@ -166,7 +166,7 @@ const Reports = () => {
 
       const { data, error } = await supabase
         .from('events')
-        .select('name, date, time, location, description')
+        .select('name, date, time, location')
         .eq('congregation_id', profile.congregation_id)
         .eq('committee_id', selectedCommittee)
         .order('date', { ascending: true });
@@ -190,14 +190,13 @@ const Reports = () => {
 
       const rows = (data || []).map(ev => [
         ev.date,
-        ev.time ? ev.time.substring(0, 5) : '19:00',
+        ev.time && ev.time !== '00:00:00' ? ev.time.substring(0, 5) : 'Todo el día',
         ev.name,
-        ev.location || 'En el Templo',
-        ev.description || '-'
+        ev.location || 'En el Templo'
       ]);
 
       autoTable(doc, {
-        head: [['Fecha', 'Hora', 'Evento', 'Lugar', 'Descripción']],
+        head: [['Fecha', 'Hora', 'Evento', 'Lugar']],
         body: rows,
         startY: 38,
         headStyles: { fillColor: [0, 174, 239], textColor: [255, 255, 255], fontStyle: 'bold' },

@@ -23,7 +23,7 @@ const CalendarYear = () => {
       const formatted = (data || []).map(ev => ({
         id: ev.id,
         title: ev.name,
-        start: `${ev.date}T${ev.time}`,
+        start: `${ev.date}T${ev.time || '00:00:00'}`,
         extendedProps: {
           color: ev.committees?.color || '#00338D',
         },
