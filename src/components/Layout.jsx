@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Home, Calendar as CalendarIcon, List, Users, FileText, LogOut, Menu, Sun, Moon, Settings as SettingsIcon } from 'lucide-react';
+import { Home, Calendar as CalendarIcon, List, Users, FileText, LogOut, Menu, Sun, Moon, Settings as SettingsIcon, X } from 'lucide-react';
 import './Layout.css';
 
 const Layout = () => {
@@ -14,6 +14,15 @@ const Layout = () => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isMobileMenuOpen]);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
@@ -30,32 +39,37 @@ const Layout = () => {
 
   return (
     <div className="layout">
-      {/* Mobile Header */}
+      {/* Mobile Overlay Dark Backdrop */}
+      {isMobileMenuOpen && (
+        <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
+      )}
+
+      {/* Mobile Header (Sólido, Sin Transparencias Raras) */}
       <div className="mobile-header">
         <div className="flex-center" style={{ gap: '10px' }}>
           <img src="/logo.png" alt="Logo" className="mobile-logo" onError={(e) => e.target.style.display = 'none'} />
           <span className="mobile-title">Agenda IPUC</span>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button className="theme-toggle-btn icon-btn outline" onClick={toggleTheme}>
+          <button className="theme-toggle-btn icon-btn outline" onClick={toggleTheme} title="Cambiar tema">
             {theme === 'dark' ? <Sun size={18} color="#FFC72C" /> : <Moon size={18} color="#00338D" />}
           </button>
           <button className="mobile-menu-btn outline" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            <Menu size={24} />
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar Sólido */}
       <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <h2 className="sidebar-title" style={{ margin: 0 }}>Agenda IPUC</h2>
-            <button className="theme-toggle-btn icon-btn outline" onClick={toggleTheme} title="Cambiar tema">
+            <button className="theme-toggle-btn icon-btn outline desktop-theme-btn" onClick={toggleTheme} title="Cambiar tema">
               {theme === 'dark' ? <Sun size={18} color="#FFC72C" /> : <Moon size={18} color="#00338D" />}
             </button>
           </div>
-          <p className="sidebar-subtitle">{profile?.congregations?.name || 'Congregación'}</p>
+          <p className="sidebar-subtitle">{profile?.congregations?.name || 'Congregación IPUC'}</p>
         </div>
 
         <nav className="sidebar-nav">

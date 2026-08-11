@@ -20,7 +20,8 @@
 }
 
 .stat-card {
-  background: var(--color-surface);
+  background: var(--color-surface-solid) !important;
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
@@ -68,15 +69,17 @@
 }
 
 .chart-card {
-  background: var(--color-surface);
+  background: var(--color-surface-solid) !important;
   border-radius: var(--radius-md);
   padding: 1.5rem;
+  border: 1.5px solid var(--color-border);
   box-shadow: var(--shadow-sm);
 }
 
 .chart-card h3 {
   font-size: 1.2rem;
   margin-bottom: 1rem;
+  color: var(--color-text-main);
 }
 
 .next-event-card {
@@ -126,7 +129,9 @@
 }
 
 .empty-dashboard {
-  background: white;
+  background: var(--color-surface-solid) !important;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-main);
   padding: 3rem;
   border-radius: var(--radius-md);
   text-align: center;

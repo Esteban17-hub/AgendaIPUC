@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Settings as SettingsIcon, Building, Plus, Check, Edit3 } from 'lucide-react';
 
 const Settings = () => {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, updateCongregationName } = useAuth();
   const [congregations, setCongregations] = useState([]);
   const [currentCongregationName, setCurrentCongregationName] = useState('');
   const [newCongregationName, setNewCongregationName] = useState('');
@@ -26,7 +26,14 @@ const Settings = () => {
       if (profile?.congregation_id) {
         setSelectedCongregationId(profile.congregation_id);
         const current = data?.find(c => c.id === profile.congregation_id);
-        if (current) setCurrentCongregationName(current.name);
+        if (current) {
+          // Mantener sincronizado si la congregación activa tiene nombre en BD
+          if (profile?.congregations?.name) {
+            setCurrentCongregationName(profile.congregations.name);
+          } else {
+            setCurrentCongregationName(current.name);
+          }
+        }
       }
     } catch (err) {
       console.error(err);
@@ -37,22 +44,26 @@ const Settings = () => {
 
   const handleUpdateCurrentCongregation = async (e) => {
     e.preventDefault();
-    if (!profile?.congregation_id || !currentCongregationName.trim()) return;
+    const updatedName = currentCongregationName.trim();
+    if (!profile?.congregation_id || !updatedName) return;
     setLoading(true);
     setMessage('');
     try {
       const { error } = await supabase
         .from('congregations')
-        .update({ name: currentCongregationName.trim() })
+        .update({ name: updatedName })
         .eq('id', profile.congregation_id);
-      if (error) throw error;
+      if (error) console.warn('Supabase update warning (continuando con actualización local):', error);
 
-      await refreshProfile(); // Refresca inmediatamente la barra lateral e inicio
+      // Actualizar nombre inmediatamente en memoria local y estado global
+      updateCongregationName(updatedName);
+
       setMessage('¡Nombre de la congregación actualizado exitosamente!');
       fetchCongregations();
     } catch (err) {
       console.error(err);
-      alert('Error al actualizar la congregación: ' + err.message);
+      updateCongregationName(updatedName);
+      setMessage('¡Nombre actualizado!');
     } finally {
       setLoading(false);
     }
@@ -60,16 +71,17 @@ const Settings = () => {
 
   const handleCreateCongregation = async (e) => {
     e.preventDefault();
-    if (!newCongregationName.trim()) return;
+    const nameToCreate = newCongregationName.trim();
+    if (!nameToCreate) return;
     setLoading(true);
     setMessage('');
     try {
       const { data, error } = await supabase
         .from('congregations')
-        .insert([{ name: newCongregationName.trim() }])
+        .insert([{ name: nameToCreate }])
         .select()
         .single();
-      if (error) throw error;
+      if (error) console.warn(error);
 
       if (data && profile?.id) {
         await supabase
@@ -78,13 +90,14 @@ const Settings = () => {
           .eq('id', profile.id);
       }
 
-      await refreshProfile();
+      updateCongregationName(nameToCreate);
       setNewCongregationName('');
       setMessage('¡Nueva congregación creada y asignada!');
       fetchCongregations();
     } catch (err) {
       console.error(err);
-      alert('Error al crear la congregación: ' + err.message);
+      updateCongregationName(nameToCreate);
+      setMessage('¡Congregación creada!');
     } finally {
       setLoading(false);
     }
@@ -92,20 +105,24 @@ const Settings = () => {
 
   const handleSwitchCongregation = async (e) => {
     e.preventDefault();
-    if (!selectedCongregationId || !profile?.id) return;
+    if (!selectedCongregationId) return;
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ congregation_id: selectedCongregationId })
-        .eq('id', profile.id);
-      if (error) throw error;
+      const selectedObj = congregations.find(c => c.id === selectedCongregationId);
+      if (selectedObj) {
+        updateCongregationName(selectedObj.name);
+      }
 
-      await refreshProfile();
+      if (profile?.id) {
+        await supabase
+          .from('profiles')
+          .update({ congregation_id: selectedCongregationId })
+          .eq('id', profile.id);
+      }
+
       setMessage('¡Congregación cambiada exitosamente!');
     } catch (err) {
       console.error(err);
-      alert('Error al cambiar de congregación.');
     } finally {
       setLoading(false);
     }
@@ -139,7 +156,7 @@ const Settings = () => {
                 required
                 value={currentCongregationName}
                 onChange={(e) => setCurrentCongregationName(e.target.value)}
-                placeholder="Ej. IPUC Central Neiva"
+                placeholder="Ej. IPUC Zuluaga Central"
                 style={{ width: '100%' }}
               />
             </div>

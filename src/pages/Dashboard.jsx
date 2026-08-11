@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Calendar as CalendarIcon, Users, Clock, MapPin, ChevronRight, Activity, Plus, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Clock, MapPin, ChevronRight, Activity, Plus, AlertCircle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EventForm from '../components/EventForm';
 import { Modal } from '../components/Modal';
+import { AIAssistantModal } from '../components/AIAssistantModal';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -12,7 +13,10 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ total: 0, month: 0, committees: 0 });
   const [nextEvent, setNextEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Modales
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -26,19 +30,16 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Total events
       const { count: totalEvents } = await supabase
         .from('events')
         .select('*', { count: 'exact', head: true })
         .eq('congregation_id', profile.congregation_id);
 
-      // Committees count
       const { count: totalCommittees } = await supabase
         .from('committees')
         .select('*', { count: 'exact', head: true })
         .eq('congregation_id', profile.congregation_id);
 
-      // Next event
       const today = new Date().toISOString().split('T')[0];
       const { data: nextEvt } = await supabase
         .from('events')
@@ -50,7 +51,6 @@ const Dashboard = () => {
         .limit(1)
         .maybeSingle();
 
-      // Events this month
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
@@ -103,12 +103,24 @@ const Dashboard = () => {
             Bienvenido, {profile?.full_name?.split(' ')[0] || 'Administrador'} - {profile?.congregations?.name || 'Congregación IPUC'}
           </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '10px', fontSize: '1rem' }}
-        >
-          <Plus size={20} /> Agregar Evento
-        </button>
+
+        {/* Botones de Acción en Inicio: Secre IA + Agregar Evento */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button 
+            className="secondary"
+            onClick={() => setIsAIModalOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '10px', fontSize: '1rem' }}
+          >
+            <Sparkles size={20} /> Secre IA
+          </button>
+
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '10px', fontSize: '1rem' }}
+          >
+            <Plus size={20} /> Agregar Evento
+          </button>
+        </div>
       </div>
 
       <div className="stats-grid">
@@ -163,7 +175,7 @@ const Dashboard = () => {
                 </div>
                 <div className="next-event-detail" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Clock size={16} /> 
-                  <span>{nextEvent.time ? nextEvent.time.substring(0,5) : '19:00'}</span>
+                  <span>{nextEvent.time && nextEvent.time !== '00:00:00' ? nextEvent.time.substring(0,5) : 'Todo el día'}</span>
                 </div>
                 <div className="next-event-detail" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <MapPin size={16} /> 
@@ -182,14 +194,20 @@ const Dashboard = () => {
             <div className="empty-dashboard" style={{ background: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--color-border)' }}>
               <h3>No hay eventos próximos</h3>
               <p style={{ marginBottom: '1.5rem', color: 'var(--color-text-muted)' }}>Planifica la próxima actividad de la congregación.</p>
-              <button onClick={() => setIsModalOpen(true)}>
-                Agregar Evento
-              </button>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button className="secondary" onClick={() => setIsAIModalOpen(true)}>
+                  <Sparkles size={16} /> Usar Secre IA
+                </button>
+                <button onClick={() => setIsModalOpen(true)}>
+                  Agregar Evento
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
+      {/* Modal Formulario Normal */}
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
           <h2 style={{ marginBottom: '1.5rem' }}>Nuevo Evento</h2>
@@ -198,6 +216,14 @@ const Dashboard = () => {
             onSuccess={fetchDashboardData} 
           />
         </Modal>
+      )}
+
+      {/* Modal Secre IA desde Inicio */}
+      {isAIModalOpen && (
+        <AIAssistantModal 
+          onClose={() => setIsAIModalOpen(false)} 
+          onSuccess={fetchDashboardData} 
+        />
       )}
     </div>
   );

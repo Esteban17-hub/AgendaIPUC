@@ -6,9 +6,9 @@ export const Modal = ({ children, onClose }) => {
       style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -19,17 +19,17 @@ export const Modal = ({ children, onClose }) => {
     >
       <div 
         style={{
-          background: 'var(--color-surface)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: 'var(--glass-border)',
-          padding: '2.2rem',
+          background: 'var(--color-surface-solid)',
+          border: '1.8px solid var(--color-secondary)',
+          padding: '2rem',
           borderRadius: 'var(--radius-md)',
           width: '100%',
-          maxWidth: '520px',
-          boxShadow: 'var(--glass-shadow)',
+          maxWidth: '560px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
           position: 'relative',
-          color: 'var(--color-text-main)'
+          color: 'var(--color-text-main)',
+          maxHeight: '90vh',
+          overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -37,16 +37,22 @@ export const Modal = ({ children, onClose }) => {
           onClick={onClose} 
           style={{
             position: 'absolute',
-            top: '18px',
-            right: '18px',
-            background: 'transparent',
-            color: 'var(--color-text-muted)',
-            border: 'none',
-            fontSize: '1.6rem',
+            top: '16px',
+            right: '16px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            color: 'var(--color-text-main)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.4rem',
             cursor: 'pointer',
-            padding: 0,
             boxShadow: 'none',
-            lineHeight: 1
+            lineHeight: 1,
+            zIndex: 10
           }}
         >
           &times;
