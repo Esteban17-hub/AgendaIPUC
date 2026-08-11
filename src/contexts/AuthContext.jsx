@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
       if (userId) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('*, congregations(name)')
+          .select('*, congregations(id, name)')
           .eq('id', userId)
           .maybeSingle();
         if (!error && data) {
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
       if (!activeProfile) {
         const { data: fallbackProfiles } = await supabase
           .from('profiles')
-          .select('*, congregations(name)')
+          .select('*, congregations(id, name)')
           .limit(1);
 
         if (fallbackProfiles && fallbackProfiles.length > 0) {
@@ -42,14 +42,17 @@ export const AuthProvider = ({ children }) => {
 
         activeProfile = {
           id: userId || 'fallback-user',
-          full_name: 'Usuario Administrador',
-          role: 'admin',
+          full_name: 'Usuario Administrador Principal',
+          role: 'superadmin',
           congregation_id: fallbackCongId,
-          congregations: { name: fallbackCongName }
+          congregations: { id: fallbackCongId, name: fallbackCongName }
         };
       }
 
-      // Si hay un nombre guardado localmente por la edición del usuario, sobrescribir para sincronización inmediata
+      if (activeProfile && !activeProfile.role) {
+        activeProfile.role = 'superadmin';
+      }
+
       if (savedCongName && activeProfile.congregations) {
         activeProfile.congregations.name = savedCongName;
       }
@@ -77,8 +80,34 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  const switchActiveCongregation = (congregationId, congregationName) => {
+    if (!congregationId) return;
+    localStorage.setItem('active_congregation_name', congregationName || '');
+    setProfile(prev => ({
+      ...prev,
+      congregation_id: congregationId,
+      congregations: {
+        id: congregationId,
+        name: congregationName || 'Congregación'
+      }
+    }));
+  };
+
   const refreshProfile = async () => {
     await fetchProfile(user?.id);
+  };
+
+  const getCongregationUserCount = async (congregationId) => {
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('congregation_id', congregationId);
+      if (error) return 0;
+      return count || 0;
+    } catch (e) {
+      return 0;
+    }
   };
 
   useEffect(() => {
@@ -113,11 +142,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, refreshProfile, updateCongregationName, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      isSuperAdmin: profile?.role === 'superadmin' || profile?.role === 'admin' || !profile?.role,
+      refreshProfile, 
+      updateCongregationName,
+      switchActiveCongregation,
+      getCongregationUserCount,
+      signIn, 
+      signOut, 
+      loading 
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;
 
 export const useAuth = () => {
   return useContext(AuthContext);

@@ -9,6 +9,7 @@ import CalendarYear from './pages/CalendarYear';
 import Committees from './pages/Committees';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Admin from './pages/Admin';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ function AppRoutes() {
         <Route path="comites" element={<Committees />} />
         <Route path="reportes" element={<Reports />} />
         <Route path="configuracion" element={<Settings />} />
+        <Route path="admin" element={<Admin />} />
       </Route>
     </Routes>
   );

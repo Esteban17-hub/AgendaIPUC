@@ -12,20 +12,17 @@ const Dashboard = () => {
   const { profile, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({ total: 0, month: 0, committees: 0 });
   const [nextEvent, setNextEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   // Modales
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   useEffect(() => {
-    if (authLoading) return;
     if (profile?.congregation_id) {
       fetchDashboardData();
-    } else {
-      setLoading(false);
     }
-  }, [profile, authLoading]);
+  }, [profile]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -75,8 +72,8 @@ const Dashboard = () => {
     }
   };
 
-  if (authLoading || loading) {
-    return <div className="loading-state">Cargando Inicio...</div>;
+  if (authLoading && !profile) {
+    return <div className="loading-state">Cargando perfil...</div>;
   }
 
   if (profile && !profile.congregation_id) {

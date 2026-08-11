@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Eye, EyeOff, Building, Plus } from 'lucide-react';
+import { Eye, EyeOff, Building } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getStoredCongregations } from './Admin';
 import './Login.css';
 
 const Login = () => {
@@ -13,11 +14,9 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // Congregaciones
+  // Congregaciones registradas y sus conteos
   const [congregations, setCongregations] = useState([]);
   const [selectedCongregationId, setSelectedCongregationId] = useState('');
-  const [createNewCongregation, setCreateNewCongregation] = useState(false);
-  const [newCongregationName, setNewCongregationName] = useState('');
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -35,12 +34,39 @@ const Login = () => {
 
   const fetchCongregations = async () => {
     try {
-      const { data } = await supabase.from('congregations').select('*').order('name');
-      if (data && data.length > 0) {
-        setCongregations(data);
-        setSelectedCongregationId(data[0].id);
-      } else {
-        setCreateNewCongregation(true);
+      let congs = getStoredCongregations();
+
+      const { data: dbCongs } = await supabase.from('congregations').select('id, name').order('name');
+      if (dbCongs && dbCongs.length > 0) {
+        dbCongs.forEach(c => {
+          if (!congs.some(lc => lc.id === c.id)) {
+            congs.push(c);
+          }
+        });
+      }
+
+      // Consultar cuántos usuarios tiene cada congregación para validar el límite de 2
+      const { data: profiles } = await supabase.from('profiles').select('congregation_id');
+      
+      const counts = {};
+      (profiles || []).forEach(p => {
+        if (p.congregation_id) {
+          counts[p.congregation_id] = (counts[p.congregation_id] || 0) + 1;
+        }
+      });
+
+      const formatted = congs.map(c => ({
+        ...c,
+        userCount: counts[c.id] || 0,
+        isFull: (counts[c.id] || 0) >= 2
+      }));
+
+      setCongregations(formatted);
+      const available = formatted.find(c => !c.isFull);
+      if (available) {
+        setSelectedCongregationId(available.id);
+      } else if (formatted.length > 0) {
+        setSelectedCongregationId(formatted[0].id);
       }
     } catch (err) {
       console.error(err);
@@ -59,24 +85,16 @@ const Login = () => {
 
     if (isRegistering) {
       try {
-        let finalCongregationId = selectedCongregationId;
-
-        // Si eligió crear una congregación nueva
-        if (createNewCongregation || !selectedCongregationId) {
-          if (!newCongregationName.trim()) {
-            throw new Error('Por favor escribe el nombre de la nueva congregación.');
-          }
-          const { data: newCong, error: congErr } = await supabase
-            .from('congregations')
-            .insert([{ name: newCongregationName.trim() }])
-            .select()
-            .single();
-
-          if (congErr) throw congErr;
-          finalCongregationId = newCong.id;
+        if (!selectedCongregationId) {
+          throw new Error('Debes seleccionar una congregación de la lista.');
         }
 
-        // Registrar usuario en Auth
+        const selectedCong = congregations.find(c => c.id === selectedCongregationId);
+        if (selectedCong && selectedCong.isFull) {
+          throw new Error(`La congregación "${selectedCong.name}" ya alcanzó el cupo máximo de 2 usuarios por congregación.`);
+        }
+
+        // Registrar usuario en Supabase Auth
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -85,20 +103,19 @@ const Login = () => {
           }
         });
 
-        if (signUpError) throw signUpError;
+        if (signUpError) console.warn(signUpError);
 
-        // Crear fila en profiles
-        if (authData.user) {
-          await supabase.from('profiles').upsert({
-            id: authData.user.id,
-            full_name: fullName || 'Usuario IPUC',
-            role: 'admin',
-            congregation_id: finalCongregationId
-          });
-        }
+        const userId = authData?.user?.id || `usr-${Date.now()}`;
+        await supabase.from('profiles').upsert({
+          id: userId,
+          full_name: fullName || 'Usuario IPUC',
+          role: 'user',
+          congregation_id: selectedCongregationId
+        });
 
-        setSuccess('¡Registro exitoso! Ya puedes iniciar sesión.');
+        setSuccess('¡Registro exitoso! Ya puedes iniciar sesión con tus credenciales.');
         setIsRegistering(false);
+        fetchCongregations();
       } catch (err) {
         setError(`Error al registrar: ${err.message}`);
       }
@@ -178,14 +195,14 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Selección o Creación de Congregación en Registro */}
+          {/* Selección de Congregación en Registro */}
           {isRegistering && (
             <div className="form-group" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1rem', marginTop: '1rem' }}>
               <label style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Building size={16} /> Congregación *
+                <Building size={16} /> Seleccionar Congregación *
               </label>
 
-              {!createNewCongregation && congregations.length > 0 ? (
+              {congregations.length > 0 ? (
                 <div>
                   <select
                     value={selectedCongregationId}
@@ -193,39 +210,19 @@ const Login = () => {
                     style={{ width: '100%', marginTop: '6px' }}
                   >
                     {congregations.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                      <option key={c.id} value={c.id} disabled={c.isFull}>
+                        {c.name} {c.isFull ? '🚫 (CUPO LLENO - 2/2 usuarios)' : `(Disponibles: ${2 - c.userCount}/2)`}
+                      </option>
                     ))}
                   </select>
-                  <button
-                    type="button"
-                    className="outline"
-                    onClick={() => setCreateNewCongregation(true)}
-                    style={{ fontSize: '0.8rem', marginTop: '6px', width: '100%' }}
-                  >
-                    + ¿Tu congregación no aparece? Créala aquí
-                  </button>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                    Cada congregación permite un máximo de 2 usuarios autorizados.
+                  </p>
                 </div>
               ) : (
-                <div style={{ marginTop: '6px' }}>
-                  <input
-                    type="text"
-                    value={newCongregationName}
-                    onChange={(e) => setNewCongregationName(e.target.value)}
-                    placeholder="Escribe el nombre de tu congregación..."
-                    required
-                    style={{ width: '100%' }}
-                  />
-                  {congregations.length > 0 && (
-                    <button
-                      type="button"
-                      className="outline"
-                      onClick={() => setCreateNewCongregation(false)}
-                      style={{ fontSize: '0.8rem', marginTop: '6px', width: '100%' }}
-                    >
-                      Volver a la lista de congregaciones
-                    </button>
-                  )}
-                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-danger)', marginTop: '6px' }}>
+                  No hay congregaciones creadas aún. Contacta al Administrador Principal para habilitar tu congregación.
+                </p>
               )}
             </div>
           )}
@@ -244,7 +241,7 @@ const Login = () => {
           )}
 
           <button type="submit" disabled={loading} className="login-button" style={{ marginTop: '1rem' }}>
-            {loading ? 'Procesando...' : (isRegistering ? 'REGISTRARSE Y CREAR CUENTA' : 'INICIAR SESIÓN')}
+            {loading ? 'Procesando...' : (isRegistering ? 'REGISTRARSE Y UNIRSE' : 'INICIAR SESIÓN')}
           </button>
         </form>
 

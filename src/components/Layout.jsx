@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Home, Calendar as CalendarIcon, List, Users, FileText, LogOut, Menu, Sun, Moon, Settings as SettingsIcon, X } from 'lucide-react';
+import { Home, Calendar as CalendarIcon, List, Users, FileText, LogOut, Menu, Sun, Moon, Settings as SettingsIcon, Shield, X } from 'lucide-react';
 import './Layout.css';
 
 const Layout = () => {
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, isSuperAdmin } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
@@ -37,6 +37,11 @@ const Layout = () => {
     { name: 'Configuración', href: '/configuracion', icon: SettingsIcon },
   ];
 
+  // Incluir el enlace de Administración General
+  if (isSuperAdmin || profile?.role === 'superadmin' || profile?.role === 'admin' || !profile?.role) {
+    navigation.push({ name: 'Administración', href: '/admin', icon: Shield });
+  }
+
   return (
     <div className="layout">
       {/* Mobile Overlay Dark Backdrop */}
@@ -44,7 +49,7 @@ const Layout = () => {
         <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
-      {/* Mobile Header (Sólido, Sin Transparencias Raras) */}
+      {/* Mobile Header (Sólido) */}
       <div className="mobile-header">
         <div className="flex-center" style={{ gap: '10px' }}>
           <img src="/logo.png" alt="Logo" className="mobile-logo" onError={(e) => e.target.style.display = 'none'} />
@@ -93,7 +98,7 @@ const Layout = () => {
         <div className="sidebar-footer">
           <div className="user-info">
             <span className="user-name">{profile?.full_name || 'Administrador'}</span>
-            <span className="user-role">{profile?.role === 'admin' ? 'Administrador' : 'Editor'}</span>
+            <span className="user-role">{profile?.role === 'superadmin' ? 'Administrador Principal' : 'Administrador Local'}</span>
           </div>
           <button onClick={signOut} className="logout-btn outline">
             <LogOut size={18} />

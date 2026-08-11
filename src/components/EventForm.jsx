@@ -55,13 +55,17 @@ const EventForm = ({ initialData = {}, onClose, onSuccess }) => {
     setLoading(true);
     setError('');
     try {
+      const validCommitteeId = (form.committee_id && !form.committee_id.startsWith('def-') && !form.committee_id.startsWith('local-')) 
+        ? form.committee_id 
+        : null;
+
       const payload = {
         name: form.name.trim(),
         date: form.date,
-        time: form.time ? form.time : '00:00:00', // Save optional time or midnight
+        time: form.time ? form.time : '00:00:00',
         location: form.location,
-        committee_id: form.committee_id,
-        congregation_id: profile.congregation_id,
+        committee_id: validCommitteeId,
+        congregation_id: profile?.congregation_id || '22222222-2222-2222-2222-222222222222',
       };
 
       if (initialData.id) {
@@ -138,7 +142,7 @@ const EventForm = ({ initialData = {}, onClose, onSuccess }) => {
           required
           style={{ width: '100%' }}
         >
-          <option value="" disabled>Selecciona un comité...</option>
+          <option value="">General (Sin comité específico)</option>
           {committees.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
