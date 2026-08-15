@@ -1,181 +1,122 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;600&family=Source+Sans+Pro:wght@400;600&display=swap');
+@import "tailwindcss";
 
-:root {
-  --font-family: 'Montserrat', sans-serif;
-  --font-body: 'Open Sans', sans-serif;
-  --font-heading: 'Source Sans Pro', sans-serif;
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
 
-  /* Tema Claro - Transparencia Glassmorphic Realista (45% opacidad) */
-  --color-background: #EAF0F8;
-  --color-surface: rgba(255, 255, 255, 0.45);
-  --color-surface-solid: #FFFFFF;
-  --color-border: rgba(255, 255, 255, 0.8);
-  --color-input-bg: rgba(255, 255, 255, 0.65);
-  --color-input-border: #94A3B8;
-  --color-text-main: #0F172A;
-  --color-text-muted: #475569;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
+}
+
+/* Ocultar barra de scroll en contenedores cuando sea necesario */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Scrollbar fino moderno */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =========================================
+   SISTEMA DE TEMAS DINÁMICOS
+========================================= */
+
+/* Tema 1: Dark Premium (Default Oscuro Vibrante - Estilo Finance) */
+:root[data-theme="dark-premium"] {
+  --gradient-committees: linear-gradient(to right, #0ea5e9, #3b82f6); /* cyan -> blue */
+  --gradient-tithes: linear-gradient(to right, #10b981, #059669); /* emerald */
+  --gradient-projects: linear-gradient(to right, #8b5cf6, #6366f1); /* violet -> indigo */
+  --gradient-reports: linear-gradient(to right, #f43f5e, #e11d48); /* rose */
+  --shadow-color: rgba(14, 165, 233, 0.15);
+
+  /* Overrides globales para estética Deep Navy (Reference App) */
+  --color-slate-950: #0B111A; /* Fondo global extra oscuro */
+  --color-slate-900: #141C2A; /* Fondos de tarjetas */
+  --color-slate-800: #1C2636; /* Bordes finos y tarjetas secundarias */
+  --color-slate-700: #293548; /* Bordes hover */
+  --color-slate-400: #899BB4; /* Textos secundarios mutados */
   
-  --color-primary: #00338D;       /* Azul IPUC */
-  --color-primary-light: #0056D6;
-  --color-secondary: #00AEEF;     /* Cyan IPUC */
-  --color-accent: #FFC72C;        /* Amarillo IPUC */
-  --color-danger: #EF4444;
-
-  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.35) 100%);
-  --glass-border: 1.5px solid rgba(255, 255, 255, 0.85);
-  --glass-shadow: 
-    inset 0 1px 2px 0 rgba(255, 255, 255, 0.9),
-    0 12px 36px 0 rgba(0, 51, 141, 0.1);
-  --glass-blur: blur(16px);
-
-  --radius-sm: 10px;
-  --radius-md: 18px;
-  --radius-lg: 24px;
+  --color-blue-500: #0EA5E9; /* Acentos Cyan vibrante */
+  --color-blue-600: #0284C7; /* Acentos Cyan hover */
+  --color-emerald-500: #00C853; /* Verde positivo neon */
+  --color-emerald-600: #00A644; /* Verde hover */
+  --color-rose-500: #FF3B30; /* Rojo negativo neon */
+  --color-rose-600: #E6352B; /* Rojo hover */
 }
 
-[data-theme="dark"] {
-  /* Tema Oscuro - Transparencia Glassmorphic Profunda (40% opacidad) */
-  --color-background: #060A12;
-  --color-surface: rgba(18, 27, 46, 0.42);
-  --color-surface-solid: #121B2D;
-  --color-border: rgba(255, 255, 255, 0.18);
-  --color-input-bg: rgba(10, 16, 28, 0.65);
-  --color-input-border: rgba(0, 174, 239, 0.4);
-  --color-text-main: #FFFFFF;
-  --color-text-muted: #CBD5E1;
-
-  --color-primary: #0066FF;
-  --color-primary-light: #3B82F6;
-  --color-secondary: #00AEEF;
-  --color-accent: #FFC72C;
-  --color-danger: #F87171;
-
-  --glass-bg: linear-gradient(135deg, rgba(24, 37, 62, 0.45) 0%, rgba(10, 16, 28, 0.38) 100%);
-  --glass-border: 1.5px solid rgba(255, 255, 255, 0.22);
-  --glass-shadow: 
-    inset 0 1px 2px 0 rgba(255, 255, 255, 0.3),
-    0 16px 45px rgba(0, 0, 0, 0.6);
-  --glass-blur: blur(16px);
+/* Tema 2: Corporate Blue (Formal Claro) */
+:root[data-theme="corporate-blue"] {
+  --gradient-committees: linear-gradient(to right, #1e40af, #1d4ed8, #1e3a8a);
+  --gradient-tithes: linear-gradient(to right, #334155, #475569, #1e293b);
+  --gradient-projects: linear-gradient(to right, #0f172a, #1e293b, #0f172a);
+  --gradient-reports: linear-gradient(to right, #1e3a8a, #1e40af, #172554);
+  --shadow-color: rgba(30, 64, 175, 0.15);
+  
+  /* Overrides globales para cambiar toda la app */
+  --color-slate-100: #f0f9ff; /* sky-50 bg */
+  --color-slate-900: #0f172a;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Tema 3: Executive Graphite (Minimalista Oscuro) */
+:root[data-theme="executive-graphite"] {
+  --gradient-committees: linear-gradient(to right, #334155, #1e293b, #0f172a);
+  --gradient-tithes: linear-gradient(to right, #44403c, #292524, #1c1917);
+  --gradient-projects: linear-gradient(to right, #3f3f46, #27272a, #18181b);
+  --gradient-reports: linear-gradient(to right, #374151, #1f2937, #111827);
+  --shadow-color: rgba(0, 0, 0, 0.4);
+
+  /* Overrides globales para cambiar toda la app */
+  --color-blue-500: #71717a; /* zinc-500 */
+  --color-blue-600: #52525b; /* zinc-600 */
+  --color-blue-700: #3f3f46; /* zinc-700 */
+  --color-emerald-400: #9ca3af; /* gray-400 */
+  --color-emerald-500: #6b7280; /* gray-500 */
+  --color-emerald-600: #4b5563; /* gray-600 */
+  
+  /* Backgrounds */
+  --color-slate-800: #27272a; /* zinc-800 */
+  --color-slate-900: #18181b; /* zinc-900 */
+  --color-slate-950: #09090b; /* zinc-950 */
 }
 
-body {
-  font-family: var(--font-body);
-  background-color: var(--color-background);
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(0, 102, 255, 0.35) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(0, 174, 239, 0.35) 0%, transparent 40%),
-    radial-gradient(circle at 50% 30%, rgba(255, 199, 44, 0.15) 0%, transparent 50%);
-  background-attachment: fixed;
-  color: var(--color-text-main);
-  transition: background-color 0.3s ease, color 0.3s ease;
-  min-height: 100vh;
-}
+/* Tema 4: Forest Emerald (Elegante Claro) */
+:root[data-theme="forest-emerald"] {
+  --gradient-committees: linear-gradient(to right, #065f46, #047857, #166534);
+  --gradient-tithes: linear-gradient(to right, #b45309, #a16207, #92400e);
+  --gradient-projects: linear-gradient(to right, #115e59, #0f766e, #065f46);
+  --gradient-reports: linear-gradient(to right, #3f6212, #15803d, #065f46);
+  --shadow-color: rgba(4, 120, 87, 0.15);
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-family);
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-/* Glassmorphism Containers con Transparencia Auténtica */
-.glass-card, .stat-card, .event-card, .committee-card, .report-card, .calendar-page, .calendar-year-page {
-  background: var(--glass-bg) !important;
-  backdrop-filter: var(--glass-blur) !important;
-  -webkit-backdrop-filter: var(--glass-blur) !important;
-  border: var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  border-radius: var(--radius-md) !important;
-}
-
-button {
-  font-family: var(--font-family);
-  cursor: pointer;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 0.7rem 1.4rem;
-  font-weight: 600;
-  transition: all 0.25s ease;
-  background-color: var(--color-primary);
-  color: #FFFFFF;
-}
-
-button:hover {
-  background-color: var(--color-primary-light);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 102, 255, 0.4);
-}
-
-button.secondary {
-  background-color: var(--color-secondary);
-  color: #FFFFFF;
-}
-
-button.secondary:hover {
-  opacity: 0.95;
-  box-shadow: 0 8px 24px rgba(0, 174, 239, 0.4);
-}
-
-button.outline {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid var(--color-border);
-  color: var(--color-text-main);
-}
-
-button.outline:hover {
-  background: rgba(0, 174, 239, 0.2);
-  border-color: var(--color-secondary);
-}
-
-/* CAMPOS DE ENTRADA Y SELECCIÓN CON TRANSPARENCIA VIBRANTE */
-input, select, textarea {
-  font-family: var(--font-body);
-  background-color: var(--color-input-bg) !important;
-  color: var(--color-text-main) !important;
-  border: 1.8px solid var(--color-input-border) !important;
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
-  outline: none;
-  font-size: 0.95rem;
-  font-weight: 600;
-  transition: all 0.25s ease;
-  backdrop-filter: blur(8px);
-}
-
-input:hover, select:hover, textarea:hover {
-  border-color: var(--color-secondary) !important;
-}
-
-input:focus, select:focus, textarea:focus {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 3.5px rgba(0, 174, 239, 0.4) !important;
-}
-
-/* Recuadros de Selección Destacados */
-.filter-box, .search-box, select {
-  border: 1.8px solid var(--color-secondary) !important;
-  box-shadow: 0 4px 16px rgba(0, 174, 239, 0.2);
-}
-
-select option {
-  background-color: var(--color-surface-solid);
-  color: var(--color-text-main);
-  padding: 10px;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.loading-state, .empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: var(--color-text-muted);
+  /* Overrides globales para cambiar toda la app */
+  --color-blue-500: #10b981; /* emerald-500 */
+  --color-blue-600: #059669; /* emerald-600 */
+  --color-blue-700: #047857; /* emerald-700 */
+  
+  /* Backgrounds */
+  --color-slate-100: #f0fdf4; /* green-50 bg */
+  --color-slate-900: #064e3b; /* emerald-900 */
 }

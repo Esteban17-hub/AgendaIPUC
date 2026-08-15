@@ -1,14 +1,86 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>agenda-iglesia</title>
-    <script type="module" crossorigin src="/assets/index-B1oythoO.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BGeaBZzT.css">
-  </head>
-  <body>
+    <title>Deborita Gestión Local - Administración Financiera Congregacional</title>
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#2563eb" />
+    <script type="module" crossorigin src="/assets/index-DAGRWR6c.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-C29AvFAO.css">
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+  <body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased selection:bg-blue-500 selection:text-white">
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            // 1. Intentar actualizar el SW en cada carga
+            reg.update();
+
+            // 2. Revisar si hay actualizaciones cada 5 minutos
+            setInterval(() => {
+              reg.update();
+            }, 5 * 60 * 1000);
+
+            // 3. Manejar cuando se encuentra una nueva versión instalada
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              if (installingWorker == null) {
+                return;
+              }
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    // Hay una nueva versión lista
+                    console.log('[App] Nueva versión detectada. Actualizando...');
+                    installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                  } else {
+                    console.log('[App] Contenido cacheado para uso offline.');
+                  }
+                }
+              };
+            };
+          }).catch(err => {
+            console.log('SW registration failed:', err);
+          });
+
+          // 4. Recargar automáticamente cuando el nuevo SW toma el control
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              console.log('[App] Recargando para aplicar nueva versión...');
+              window.location.reload();
+            }
+          });
+        });
+      }
+
+      // Watchdog de Autoreparación: Elimina pantallas en blanco automáticamente
+      setTimeout(() => {
+        const rootEl = document.getElementById('root');
+        if (rootEl && rootEl.children.length === 0) {
+          console.warn('Pantalla en blanco detectada. Autorreparando app...');
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+              for (let reg of registrations) reg.unregister();
+            });
+          }
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              for (let name of names) caches.delete(name);
+            });
+          }
+          setTimeout(() => window.location.reload(true), 500);
+        }
+      }, 2500);
+    </script>
   </body>
 </html>
