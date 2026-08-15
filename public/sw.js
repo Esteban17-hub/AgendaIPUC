@@ -1,4 +1,4 @@
-const CACHE_NAME = 'deborita-pwa-v2'; // Cache actualizado para forzar limpieza de CSP
+const CACHE_NAME = 'deborita-pwa-v1'; // Cambiar versión manualmente al desplegar, o usar un bundler.
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -92,4 +92,7 @@ self.addEventListener('fetch', (event) => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+
+
 });
