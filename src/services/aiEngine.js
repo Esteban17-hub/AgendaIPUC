@@ -97,8 +97,7 @@ REGLAS VITALES:
         body: JSON.stringify({
           model: modelName,
           messages: messages,
-          temperature: 0.1,
-          response_format: { type: "json_object" }
+          temperature: 0.1
         })
       });
 
